@@ -1,0 +1,395 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ChatGPT Clone</title>
+    <style>
+        :root {
+            --bg: #f4efe7;
+            --panel: rgba(255, 252, 247, 0.92);
+            --line: rgba(109, 82, 58, 0.18);
+            --text: #2d241c;
+            --muted: #6d6257;
+            --primary: #c66a3d;
+            --primary-dark: #8e4724;
+            --user-bubble: #fff3d8;
+            --bot-bubble: #fffdf8;
+            --shadow: 0 24px 60px rgba(88, 56, 30, 0.18);
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            min-height: 100vh;
+            font-family: Georgia, "Times New Roman", serif;
+            color: var(--text);
+            background:
+                radial-gradient(circle at top left, rgba(198, 106, 61, 0.28), transparent 32%),
+                radial-gradient(circle at bottom right, rgba(233, 199, 110, 0.35), transparent 28%),
+                linear-gradient(135deg, #f7f1e8 0%, #efe4d3 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 24px;
+        }
+
+        .app-shell {
+            width: min(100%, 980px);
+            min-height: 82vh;
+            display: grid;
+            grid-template-columns: 280px 1fr;
+            background: var(--panel);
+            border: 1px solid var(--line);
+            border-radius: 28px;
+            overflow: hidden;
+            box-shadow: var(--shadow);
+            backdrop-filter: blur(10px);
+        }
+
+        .hero {
+            padding: 32px 26px;
+            background:
+                linear-gradient(180deg, rgba(198, 106, 61, 0.9), rgba(142, 71, 36, 0.94)),
+                linear-gradient(135deg, #c66a3d, #8e4724);
+            color: #fff8f1;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+        }
+
+        .badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 8px 14px;
+            border-radius: 999px;
+            background: rgba(255, 248, 241, 0.16);
+            border: 1px solid rgba(255, 248, 241, 0.2);
+            font-size: 0.9rem;
+            letter-spacing: 0.02em;
+        }
+
+        .hero h1 {
+            margin: 20px 0 12px;
+            font-size: clamp(2rem, 5vw, 3rem);
+            line-height: 0.95;
+        }
+
+        .hero p {
+            margin: 0;
+            color: rgba(255, 248, 241, 0.82);
+            line-height: 1.7;
+            font-size: 1rem;
+        }
+
+        .tips {
+            margin-top: 24px;
+            padding: 16px;
+            border-radius: 18px;
+            background: rgba(255, 248, 241, 0.12);
+            border: 1px solid rgba(255, 248, 241, 0.16);
+            line-height: 1.7;
+            font-size: 0.95rem;
+        }
+
+        .chat-area {
+            display: flex;
+            flex-direction: column;
+            min-height: 82vh;
+        }
+
+        .chat-header {
+            padding: 24px 28px 18px;
+            border-bottom: 1px solid var(--line);
+            background: rgba(255, 255, 255, 0.4);
+        }
+
+        .chat-header h2 {
+            margin: 0;
+            font-size: 1.35rem;
+        }
+
+        .chat-header p {
+            margin: 6px 0 0;
+            color: var(--muted);
+        }
+
+        .messages {
+            flex: 1;
+            padding: 24px 28px;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+            background:
+                linear-gradient(180deg, rgba(255, 255, 255, 0.38), rgba(255, 249, 242, 0.75));
+        }
+
+        .message {
+            max-width: 78%;
+            padding: 16px 18px;
+            border-radius: 20px;
+            border: 1px solid var(--line);
+            box-shadow: 0 8px 20px rgba(83, 60, 41, 0.08);
+            animation: fadeUp 0.24s ease;
+        }
+
+        .message small {
+            display: block;
+            margin-bottom: 8px;
+            color: var(--muted);
+            font-size: 0.8rem;
+            letter-spacing: 0.02em;
+        }
+
+        .message p {
+            margin: 0;
+            line-height: 1.7;
+            white-space: pre-wrap;
+            word-break: break-word;
+        }
+
+        .message.user {
+            margin-left: auto;
+            background: var(--user-bubble);
+            border-bottom-right-radius: 6px;
+        }
+
+        .message.bot {
+            background: var(--bot-bubble);
+            border-bottom-left-radius: 6px;
+        }
+
+        .composer {
+            padding: 20px 24px 24px;
+            border-top: 1px solid var(--line);
+            background: rgba(255, 255, 255, 0.55);
+        }
+
+        .composer form {
+            display: grid;
+            grid-template-columns: 1fr auto;
+            gap: 14px;
+            align-items: end;
+        }
+
+        .input-wrap {
+            position: relative;
+        }
+
+        textarea {
+            width: 100%;
+            min-height: 90px;
+            resize: vertical;
+            padding: 16px 18px;
+            border-radius: 18px;
+            border: 1px solid var(--line);
+            outline: none;
+            font: inherit;
+            color: var(--text);
+            background: rgba(255, 255, 255, 0.88);
+            transition: border-color 0.2s ease, box-shadow 0.2s ease, transform 0.2s ease;
+        }
+
+        textarea:focus {
+            border-color: rgba(198, 106, 61, 0.72);
+            box-shadow: 0 0 0 4px rgba(198, 106, 61, 0.14);
+            transform: translateY(-1px);
+        }
+
+        button {
+            border: 0;
+            border-radius: 18px;
+            padding: 16px 22px;
+            font: inherit;
+            font-weight: 700;
+            color: #fffaf5;
+            background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+            cursor: pointer;
+            box-shadow: 0 14px 24px rgba(142, 71, 36, 0.22);
+            transition: transform 0.2s ease, box-shadow 0.2s ease, opacity 0.2s ease;
+        }
+
+        button:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 18px 28px rgba(142, 71, 36, 0.28);
+        }
+
+        button:disabled {
+            opacity: 0.65;
+            cursor: wait;
+            transform: none;
+        }
+
+        .status {
+            margin-top: 12px;
+            color: var(--muted);
+            font-size: 0.92rem;
+            min-height: 1.2em;
+        }
+
+        @keyframes fadeUp {
+            from {
+                opacity: 0;
+                transform: translateY(8px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @media (max-width: 860px) {
+            .app-shell {
+                grid-template-columns: 1fr;
+            }
+
+            .hero {
+                gap: 20px;
+            }
+
+            .chat-area {
+                min-height: 65vh;
+            }
+
+            .composer form {
+                grid-template-columns: 1fr;
+            }
+
+            .message {
+                max-width: 100%;
+            }
+        }
+    </style>
+</head>
+<body>
+    <main class="app-shell">
+        <aside class="hero">
+            <div>
+                <span class="badge">AI Chat Workspace</span>
+                <h1>Simple, warm, and ready to chat.</h1>
+                <p>Type a question, press send, and your Django app will talk back in a clean conversation layout.</p>
+            </div>
+            <div class="tips">
+                <strong>Quick tips</strong><br>
+                Use short prompts for testing.<br>
+                Press Enter to send and Shift+Enter for a new line.
+            </div>
+        </aside>
+
+        <section class="chat-area">
+            <header class="chat-header">
+                <h2>ChatGPT Clone</h2>
+                <p>Your messages appear on the right and assistant replies appear on the left.</p>
+            </header>
+
+            <div class="messages" id="response">
+                <article class="message bot">
+                    <small>Assistant</small>
+                    <p>Hello. Ask me anything to test the app.</p>
+                </article>
+            </div>
+
+            <div class="composer">
+                <form id="chat-form" method="post">
+                    {% csrf_token %}
+                    <div class="input-wrap">
+                        <textarea id="prompt" name="prompt" placeholder="Write your prompt here..."></textarea>
+                    </div>
+                    <button id="send-button" type="submit">Send</button>
+                </form>
+                <div class="status" id="status"></div>
+            </div>
+        </section>
+    </main>
+
+    <script>
+        const form = document.getElementById("chat-form");
+        const promptInput = document.getElementById("prompt");
+        const responseBox = document.getElementById("response");
+        const statusBox = document.getElementById("status");
+        const sendButton = document.getElementById("send-button");
+
+        function getCookie(name) {
+            const cookies = document.cookie ? document.cookie.split(";") : [];
+            for (const cookie of cookies) {
+                const trimmed = cookie.trim();
+                if (trimmed.startsWith(name + "=")) {
+                    return decodeURIComponent(trimmed.substring(name.length + 1));
+                }
+            }
+            return null;
+        }
+
+        function formatTime() {
+            return new Date().toLocaleTimeString([], {
+                hour: "2-digit",
+                minute: "2-digit",
+            });
+        }
+
+        function appendMessage(role, text) {
+            const card = document.createElement("article");
+            card.className = `message ${role}`;
+
+            const label = document.createElement("small");
+            label.textContent = `${role === "user" ? "You" : "Assistant"} • ${formatTime()}`;
+
+            const body = document.createElement("p");
+            body.textContent = text;
+
+            card.appendChild(label);
+            card.appendChild(body);
+            responseBox.appendChild(card);
+            responseBox.scrollTop = responseBox.scrollHeight;
+        }
+
+        promptInput.addEventListener("keydown", function (event) {
+            if (event.key === "Enter" && !event.shiftKey) {
+                event.preventDefault();
+                form.requestSubmit();
+            }
+        });
+
+        form.addEventListener("submit", async function (event) {
+            event.preventDefault();
+
+            const prompt = promptInput.value.trim();
+            if (!prompt) {
+                statusBox.textContent = "Please enter a prompt first.";
+                return;
+            }
+
+            appendMessage("user", prompt);
+            promptInput.value = "";
+            statusBox.textContent = "Waiting for assistant...";
+            sendButton.disabled = true;
+
+            try {
+                const response = await fetch("/", {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/x-www-form-urlencoded",
+                        "X-CSRFToken": getCookie("csrftoken"),
+                    },
+                    body: new URLSearchParams({ prompt }),
+                });
+
+                const data = await response.json();
+                appendMessage("bot", data.response || "No response received.");
+                statusBox.textContent = response.ok ? "Reply received." : "The request returned an error.";
+            } catch (error) {
+                appendMessage("bot", "Something went wrong while contacting the server.");
+                statusBox.textContent = "Network error. Please try again.";
+            } finally {
+                sendButton.disabled = false;
+                promptInput.focus();
+            }
+        });
+    </script>
+</body>
+</html>
